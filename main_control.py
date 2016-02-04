@@ -21,11 +21,12 @@ def get_images(path=os.path.normpath("E:/Dropbox/Images")):
                 print(link)
                 result = imgur.get(link)
                 print("Result: ", result, opened)
-                if result and f.closed:
+                if result is not True:
+                    os.rename(opened, path + "\\Imgur\\Big albums\\" + result + ".txt")
+                    print("Something went wrong in imgur: " + result)
+                else:
                     os.remove(opened)
                     print('\n')
-                else:
-                    print("Something went wrong in imgur")
             # Gfycat images
             elif 'gfycat.com' in link:
                 gfy_id = link.split("/")[-1].split(".")[0]
@@ -115,23 +116,8 @@ try:
 except:
     if chrome_on:
         driver.quit()
+    print("Fatal error")
     logging.exception("Error ")
 
 if chrome_on:
     driver.quit()
-
-#driver.set_window_position(x=-2000, y=0)
-#time.sleep(4)
-#if len(driver.window_handles) < 2:
-#    driver.quit()
-#    sys.exit("Error installing tampermonkey")
-#time.sleep(4)
-#tabs = driver.window_handles
-
-#for tab in tabs:
-    #driver.switch_to.window(tab)
-    # if r"https://www.google.com/_/chrome/newtab?espv=2&ie=UTF-8" in driver.current_url:
-    #      continue
-    #   driver.close()
-
-#driver.switch_to.window(driver.window_handles[0])

@@ -6,6 +6,9 @@ import os
 
 class Imgur(object):
 
+    max_images = 50
+    max_size = 157286400 # In bytes
+
     def __init__(self, imgurclient=None):
         self.imgurclient = imgurclient
 
@@ -19,7 +22,6 @@ class Imgur(object):
             if "i.imgur.com" in link:
                 img_id = link[-1].split(".")[0]
                 image = imgurclient.get_image(image_id=img_id)
-                print("First if ", img_id)
                 return self.download(image)
             elif "a" in link:
                 if link[-1] == "gallery":
@@ -28,18 +30,17 @@ class Imgur(object):
                     album_id = link[-1]
                 album = imgurclient.get_album(album_id)
                 images = imgurclient.get_album_images(album_id)
-                print("Second if ", album_id)
                 return self.download(images, self.album_name(album))
             elif "imgur.com" in link:
                 img_id = link[-1]
+                if img_id == "new":
+                    img_id = link[-2]
                 if len(img_id) == 5:
                     album = imgurclient.get_album(img_id)
                     images = imgurclient.get_album_images(img_id)
-                    print("Third if 1 ", album.title, album.id)
                     return self.download(images, self.album_name(album))
                 else:
                     image = imgurclient.get_image(img_id)
-                    print("Third if 2 ", img_id)
                     return self.download(image)
 
         except ImgurClientError as e:
@@ -70,6 +71,12 @@ class Imgur(object):
 
         # Checks if it's an album or a single image
         if type(images) is list:
+            if len(images) > self.max_images:
+                print("Too many images: ", len(images))
+                size = self.get_size(images)
+                if size > self.max_size:
+                    print("Too big:", size)
+                    return False
             folder_name = album_name + "\\"
             index = ["%.2d" % i for i in range(1, len(images)+1)]
             for idx, image in enumerate(images):
@@ -89,3 +96,15 @@ class Imgur(object):
         else:
             print(album.title + " " + album.id)
             return album.title + " " + album.id
+
+    def set_max_images(self, amount):
+        self.max_images = amount
+
+    def set_max_size(self, size):
+        self.max_size = size
+
+    def get_size(self, images):
+        size = 0
+        for image in images:
+            size += image.size
+        return size

@@ -9,13 +9,11 @@ class Deviantart(object):
     def __init__(self, chrome):
         self.driver = chrome
 
-    def get_image(self, file_path):
+    # Gets the and downloads the image. Returns True on success
+    def get_image(self, file_path, link):
         driver = self.driver
-        with open(file_path) as f:
-            file_content = f.readline()
-            f.close()
-        driver.get(file_content)
-        filename = file_content.split("/")[-1]
+        driver.get(link)
+        filename = link.split("/")[-1]
         sleep(5)
         value = self.click_download()
         if value:
@@ -26,7 +24,10 @@ class Deviantart(object):
                 return True
             else:
                 return False
+        else:
+            return value
 
+    # Clicks on the download link and opens it in a new tab. Returns True on success
     def click_download(self):
         driver = self.driver
         try:
@@ -47,6 +48,7 @@ class Deviantart(object):
                 print("Shit")
                 return False
 
+    # Closes the the current tab and leaves the full-sized image tab open.
     def close_tab(self):
         driver = self.driver
         url = driver.current_url
@@ -57,6 +59,7 @@ class Deviantart(object):
                 driver.close()
         return driver.current_url
 
+    # Downloads the image. Returns True on success
     def download_image(self, url, image_name):
         r = requests.get(url, stream=True)
         print(url)

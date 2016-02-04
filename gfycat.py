@@ -6,6 +6,7 @@ class Gfycat(object):
     def __init__(self, down_path=os.path.normpath('E:/Dropbox/Images/Gfycat')):
         self.down_path = down_path
 
+    # Gets the gfycat gif and saves it. Returns True on success
     def get_image(self, url):
         gfy_api = 'https://gfycat.com/cajax/get/'
         r = requests.get(gfy_api + url)
@@ -25,6 +26,7 @@ class Gfycat(object):
                         name = title + " " + gif_stuff.get('gfyName')
                     return self.download_image(url, name)
 
+    # Downloads the image
     def download_image(self, url, name):
             r = requests.get(url, stream=True)
             if r.status_code == 200:

@@ -39,7 +39,7 @@ def get_images(path=os.path.normpath("E:/Dropbox/Images")):
             # DeviantArt images. Doesn't work if Chrome didn't start correctly
             elif 'deviantart.com' in link and chrome_working:
                 close_windows(driver.current_url)
-                result = deviantart.get_image(opened)
+                result = deviantart.get_image(opened, link)
                 if result:
                     print("Nice", result)
                 else:
@@ -59,6 +59,7 @@ def close_windows(curr_url):
     driver.switch_to.window(saved_handle)
 
 # Set up the variables
+# Start Imgur
 client_id = 'b903704e3bee004'
 client_Secret = 'f53909a6dc51f30b8477fa3c8d896b0af5c7d52b'
 client = ImgurClient(client_id, client_Secret)

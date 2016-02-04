@@ -71,14 +71,15 @@ class Imgur(object):
 
         # Checks if it's an album or a single image
         if type(images) is list:
-            if len(images) > self.max_images:
-                print("Too many images: ", len(images))
+            amount = len(images)
+            if amount > self.max_images:
+                print("Too many images: ", amount)
                 size = self.get_size(images)
                 if size > self.max_size:
                     print("Too big:", size)
-                    return False
+                    return "Images " + str(amount) + " Size " + str(size/1000000) + "MB"
             folder_name = album_name + "\\"
-            index = ["%.2d" % i for i in range(1, len(images)+1)]
+            index = ["%.2d" % i for i in range(1, amount+1)]
             for idx, image in enumerate(images):
                 value = download_image(image, folder=folder_name, i=index[idx])
             return value

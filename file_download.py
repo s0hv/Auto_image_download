@@ -21,10 +21,11 @@ class GetFiles(object):
     # Chrome status
     chrome_working = False
     chrome_on = False
+    chrome_extension = ""
 
     # Checks files in path and reads them. If image download fails the text file will not be deleted.
     def get_images(self):
-        global imgur, gfycat, deviantart, path
+        global imgur, gfycat, deviantart, path, chrome_extension
         files = [i for i in os.listdir(path) if ".txt" in i]
         for file in files:
             opened = path + "\\" + file
@@ -55,7 +56,7 @@ class GetFiles(object):
                 # DeviantArt images. Doesn't work if Chrome didn't start correctly
                 elif 'deviantart.com' in link:
                     if not chrome_on:
-                        self.open_chrome()
+                        self.open_chrome(chrome_extension)
                     if chrome_working:
                         self.close_windows(driver.current_url)
                         result = deviantart.get_image(opened, link)
@@ -78,11 +79,11 @@ class GetFiles(object):
         driver.switch_to.window(saved_handle)
 
     @staticmethod
-    def open_chrome():
+    def open_chrome(extension_path):
         global chrome_on, chrome_working, driver, deviantart
         # Initialize Chrome
         options = webdriver.ChromeOptions()
-        options.add_extension(r"C:\Users\Tariq\Scripts\projects\Image downloader\Tampermonkey.crx")
+        options.add_extension(extension_path)
         driver = webdriver.Chrome(chrome_options=options)
         driver.set_window_position(x=-2000, y=0)
         chrome_on = True
@@ -127,6 +128,12 @@ class GetFiles(object):
         global path
         path = image_path
 
-    def quit_chrome(self):
+    @staticmethod
+    def ext_path(path):
+        global chrome_extension
+        chrome_extension = path
+
+    @staticmethod
+    def quit_chrome():
         if chrome_on:
             driver.quit()

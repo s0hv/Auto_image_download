@@ -64,8 +64,8 @@ def close_windows(curr_url):
 
 # Set up the variables
 # Start Imgur
-client_id = 'b903704e3bee004'
-client_Secret = 'f53909a6dc51f30b8477fa3c8d896b0af5c7d52b'
+client_id = 'Your id'
+client_Secret = 'Your secret'
 client = ImgurClient(client_id, client_Secret)
 gfycat = Gfycat()
 imgur = Imgur(imgurclient=client)

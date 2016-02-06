@@ -38,13 +38,18 @@ class GetFiles(object):
                 # Imgur images
                 if 'imgur.com/' in link:
                     print(link)
-                    result = s.imgur.get(link)
+                    result = s.imgur.get(link,file)
                     print("Result: ", result, opened)
-                    if result is not True:
+                    if result is False:
+                        print("Could not download image")
+                    elif result is not False and not True:
+                        print("d")
                         os.rename(opened, path + "\\Imgur\\Big albums\\" + result + ".txt")
                         print("Something went wrong in imgur: " + result)
-                    else:
-                        os.remove(opened)
+                    elif result:
+                        print("dd")
+                        if os.path.isfile(opened):
+                            os.remove(opened)
                         print('\n')
                 # Gfycat images
                 elif 'gfycat.com' in link:

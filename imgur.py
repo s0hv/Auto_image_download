@@ -13,10 +13,10 @@ class Imgur(object):
         self.imgurclient = imgurclient
 
     # Get the Imgur image. Exceptions return False, otherwise True
-    def get(self, url):
+    def get(self, url, filename):
         imgurclient = self.imgurclient
         if imgurclient is None:
-            return "No imgurclient"
+            raise ImgurClientError
         try:
             link = url.split("/")
             if "i.imgur.com" in link:
@@ -24,13 +24,14 @@ class Imgur(object):
                 image = imgurclient.get_image(image_id=img_id)
                 return self.download(image)
             elif "a" in link:
+                print("k")
                 if link[-1] == "gallery":
                     album_id = link[-2]
                 else:
                     album_id = link[-1]
                 album = imgurclient.get_album(album_id)
                 images = imgurclient.get_album_images(album_id)
-                return self.download(images, self.album_name(album))
+                return self.download(images, self.album_name(album), filename)
             elif "imgur.com" in link:
                 img_id = link[-1]
                 if img_id == "new":
@@ -38,25 +39,34 @@ class Imgur(object):
                 if len(img_id) == 5:
                     album = imgurclient.get_album(img_id)
                     images = imgurclient.get_album_images(img_id)
-                    return self.download(images, self.album_name(album))
-                else:
+                    return self.download(images, self.album_name(album), filename)
+                elif img_id is not None:
                     image = imgurclient.get_image(img_id)
                     return self.download(image)
+                else:
+                    return False
+            else:
+                print(link)
+                return False
 
         except ImgurClientError as e:
-            return False
             print(e.error_message)
             print(e.status_code)
+            return False
 
-    def download(self, images, album_name=None):
+    def download(self, images, album_name=None, file=None, moved=True):
         # Called for images. Returns True on success and False otherwise
         def download_image(image_obj, folder="", i=""):
+            nonlocal moved
             r = requests.get(image_obj.link, stream=True)
             print(folder)
             if r.status_code == 200:
                 path = os.path.normpath('E:/Dropbox/Images/Imgur/' + folder)
                 if not os.path.exists(path):
                     os.mkdir(path)
+                if file is not None and not moved:
+                    os.rename('E:\\Dropbox\\Images\\' + file, path + '\\' + file)
+                    moved = True
                 if i != "":
                     i += " "
                 path = path + "\\" + i + image_obj.id + "." + image_obj.type.replace("image/", "")
@@ -80,6 +90,7 @@ class Imgur(object):
                     return "Images " + str(amount) + " Size " + str(size/1000000) + "MB"
             folder_name = album_name + "\\"
             index = ["%.2d" % i for i in range(1, amount+1)]
+            moved = False
             for idx, image in enumerate(images):
                 value = download_image(image, folder=folder_name, i=index[idx])
             return value

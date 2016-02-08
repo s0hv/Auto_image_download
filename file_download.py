@@ -1,11 +1,12 @@
+import os
+import time
+
 from imgurpython import ImgurClient
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
-from imgur import Imgur
-from gfycat import Gfycat
-from deviantart import Deviantart
-from direct_links import DirectLink
-import os, time
+
+import downloaders
+from downloaders import Imgur, Gfycat, Deviantart, DirectLink, Tumblr
 
 
 class GetFiles(object):
@@ -18,6 +19,7 @@ class GetFiles(object):
         s.phantom_path = ""
         # Image sites
         s.gfycat = Gfycat()
+        s.tumblr = None
         s.imgur = None
         s.deviantart = None
         # Chrome status
@@ -72,6 +74,12 @@ class GetFiles(object):
                             print("Nice", result)
                         else:
                             print("Fuck")
+                elif '.tumblr.' in link:
+                    if s.tumblr is not None:
+                        result = s.tumblr.download(link)
+                        print(result)
+                        if result is True:
+                            os.remove(opened)
                 else:
                     if not s.phantom_on:
                         s.start_phantomjs()
@@ -134,6 +142,8 @@ class GetFiles(object):
     # Set path to image folder
     def set_path(s, image_path):
         s.path = image_path
+        downloaders.set_folder(image_path)
+        downloaders.check_folders()
 
     def ext_path(s, path):
         s.chrome_extension = path
@@ -146,6 +156,8 @@ class GetFiles(object):
         s.phantom_driver = webdriver.PhantomJS(s.phantom_path)
         s.phantom_on = True
 
-    def pahntom_path(s, path):
+    def set_phantom_path(s, path):
         s.phantom_path = path
 
+    def set_tumblr(s, key):
+        s.tumblr = Tumblr(key)

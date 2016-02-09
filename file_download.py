@@ -127,10 +127,14 @@ class GetFiles(object):
             url = driver.current_url
             if 'chrome-extension://' in url:
                 try:
-                    elem = driver.find_element_by_id('input_dG1fSW5zdGFsbA')
-                    elem.click()
-                    s.chrome_working = True
-                    s.deviantart = Deviantart(driver)
+                    elements = driver.find_elements_by_tag_name('input')
+                    for e in elements:
+                        print(e.get_attribute('value'))
+                        if e.get_attribute('value') == 'Install':
+                            e.click()
+                            s.deviantart = Deviantart(driver)
+                            s.chrome_working = True
+                            break
                 except NoSuchElementException:
                     s.chrome_working = False
 

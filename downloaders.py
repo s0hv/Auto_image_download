@@ -25,11 +25,13 @@ def save_file(path, content):
         return True
 
 
+# The folder where the subfolders and text files are
 def set_folder(path):
     global main_folder
     main_folder = path
 
 
+# Checks the required folders in the folders variable and creates them when needed
 def check_folders():
     global folders
     created = 0
@@ -67,7 +69,6 @@ class Imgur(object):
                 image = imgurclient.get_image(image_id=img_id)
                 return self.download(image)
             elif "a" in link:
-                print("k")
                 if link[-1] == "gallery":
                     album_id = link[-2]
                 else:
@@ -100,6 +101,7 @@ class Imgur(object):
             return False
 
     def download(self, images, album_name=None, file=None):
+
         # Called for images. Returns True on success and False otherwise
         def download_image(image_obj, folder="", i=""):
             nonlocal moved
@@ -109,7 +111,6 @@ class Imgur(object):
                 if folder != "":
                     folder = "\\" + folder
                 path = imgur + folder
-                print(folder)
                 if not os.path.exists(path):
                     os.mkdir(path)
                 if file is not None and moved is False:
@@ -208,6 +209,7 @@ class Gfycat(object):
 class DirectLink(object):
 
     @staticmethod
+    # Downloads images using the phantomJS browser
     def download_image(url, file_path, driver):
         def download():
             if r.status_code == 200:
@@ -289,7 +291,7 @@ class Deviantart(object):
                 elem.click()
                 return True
             except NoSuchElementException:
-                print("Shit")
+                print("Something went wrong while trying to get the download link")
                 return False
 
     # Closes the the current tab and leaves the full-sized image tab open.
@@ -327,6 +329,7 @@ class Tumblr(object):
         self.oauth = OAuth1Session(client_key=self.api_key)
 
     @staticmethod
+    # Used to determine the post id
     def strisint(s):
         try:
             int(s)
@@ -385,11 +388,7 @@ class Tumblr(object):
                 i += " "
             path += "\\" + i + url.split('/')[-1]
             print(path)
-            with open(path, 'wb') as f:
-                f.raw.decode_content = True
-                shutil.copyfileobj(r.raw, f)
-                f.close()
-                return True
+            save_file(path, r.raw)
         else:
             print("Url error")
             return False

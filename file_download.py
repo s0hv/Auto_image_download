@@ -45,11 +45,10 @@ class GetFiles(object):
                     if result is False:
                         print("Could not download image")
                     elif result is not False and not True:
-                        print("d")
+                        print("Big album")
                         os.rename(opened, path + "\\Imgur\\Big albums\\" + result + ".txt")
-                        print("Something went wrong in imgur: " + result)
                     elif result:
-                        print("dd")
+                        print("Success")
                         if os.path.isfile(opened):
                             os.remove(opened)
                         print('\n')
@@ -86,6 +85,7 @@ class GetFiles(object):
                     result = DirectLink.download_image(link, opened, s.phantom_driver)
                     if not result:
                         print("Fuck")
+            print('\n')
 
     def close_windows(s, curr_url):
         driver = s.driver
@@ -104,7 +104,11 @@ class GetFiles(object):
         # Initialize Chrome
         options = webdriver.ChromeOptions()
         options.add_extension(extension_path)
-        s.driver = webdriver.Chrome(chrome_options=options)
+        try:
+            s.driver = webdriver.Chrome(chrome_options=options)
+        except (AttributeError, OSError) as e:
+            print(e)
+            pass
         driver = s.driver
         driver.set_window_position(x=-2000, y=0)
         s.chrome_on = True
@@ -129,7 +133,6 @@ class GetFiles(object):
                 try:
                     elements = driver.find_elements_by_tag_name('input')
                     for e in elements:
-                        print(e.get_attribute('value'))
                         if e.get_attribute('value') == 'Install':
                             e.click()
                             s.deviantart = Deviantart(driver)
@@ -157,7 +160,11 @@ class GetFiles(object):
             s.driver.quit()
 
     def start_phantomjs(s):
-        s.phantom_driver = webdriver.PhantomJS(s.phantom_path)
+        try:
+            s.phantom_driver = webdriver.PhantomJS(s.phantom_path)
+        except (AttributeError, OSError) as e:
+            print(e)
+            pass
         s.phantom_on = True
 
     def set_phantom_path(s, path):
@@ -165,3 +172,7 @@ class GetFiles(object):
 
     def set_tumblr(s, key):
         s.tumblr = Tumblr(key)
+
+    def stop_phantom(s):
+        if s.phantom_on:
+            s.phantom_driver.quit()

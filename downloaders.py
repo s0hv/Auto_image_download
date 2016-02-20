@@ -6,6 +6,7 @@ import xml.etree.ElementTree as etree
 from time import sleep
 
 import requests
+from requests.exceptions import ConnectionError
 from imgurpython.helpers.error import ImgurClientError
 from requests_oauthlib import OAuth1Session
 from selenium.common.exceptions import NoSuchElementException
@@ -47,12 +48,13 @@ def check_folders():
         folders[key] = folder
     if created > 0:
         print("Created ", created, " folders")
+    print('\n')
 
 
 class Imgur(object):
 
     max_images = 50
-    max_size = 157286400 # In bytes
+    max_size = 157286400  # In bytes
 
     def __init__(self, imgurclient=None):
         self.imgurclient = imgurclient
@@ -66,6 +68,7 @@ class Imgur(object):
             link = url.split("/")
             if "i.imgur.com" in link:
                 img_id = link[-1].split(".")[0]
+                print("Image id:", img_id)
                 image = imgurclient.get_image(image_id=img_id)
                 return self.download(image)
             elif "a" in link:
@@ -75,6 +78,7 @@ class Imgur(object):
                     album_id = link[-1]
                 if "#" in album_id:
                     album_id = album_id.split("#")[0]
+                print("Image id:", album_id)
                 album = imgurclient.get_album(album_id)
                 images = imgurclient.get_album_images(album_id)
                 return self.download(images, self.album_name(album), filename)
@@ -83,10 +87,12 @@ class Imgur(object):
                 if img_id == "new":
                     img_id = link[-2]
                 if len(img_id) == 5:
+                    print("Image id:", img_id)
                     album = imgurclient.get_album(img_id)
                     images = imgurclient.get_album_images(img_id)
                     return self.download(images, self.album_name(album), filename)
                 elif img_id is not None:
+                    print("Image id:", img_id)
                     image = imgurclient.get_image(img_id)
                     return self.download(image)
                 else:
@@ -227,7 +233,12 @@ class DirectLink(object):
             else:
                 return False
         image_name = url.split('/')[-1]
-        r = requests.get(url, stream=True)
+        print(url)
+        try:
+            r = requests.get(url, stream=True)
+        except ConnectionError as e:
+            print(e)
+            return False
         print(image_name)
         if "image" in r.headers['Content-Type']:
             return download()
@@ -344,6 +355,7 @@ class Tumblr(object):
             post_id = a[-2]
         else:
             post_id = a[-1]
+        print('Tumblr post id:', post_id)
         folder = a[-1]
         blog_name = a[2].split('.')[0]
         api += blog_name + '/posts?id=' + post_id
@@ -364,6 +376,7 @@ class Tumblr(object):
         for idx, image in enumerate(images):
             url = image.get('original_size').get('url')
             if not self.download_image(url, folder, index[idx]):
+                print('Download error', url, folder, idx)
                 return False
         print(extra_images)
         if '<img' in extra_images:
@@ -373,6 +386,7 @@ class Tumblr(object):
                 i = img.find('img')
                 if i is not None:
                     url = i.get('src')
+                    print(url)
                     if not self.download_image(url, folder):
                         return False
         return True
@@ -388,8 +402,7 @@ class Tumblr(object):
                 i += " "
             path += "\\" + i + url.split('/')[-1]
             print(path)
-            save_file(path, r.raw)
+            return save_file(path, r.raw)
         else:
             print("Url error")
             return False
-

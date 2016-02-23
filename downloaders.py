@@ -4,6 +4,7 @@ import shutil
 import sys
 import xml.etree.ElementTree as etree
 from time import sleep
+import re
 
 import requests
 from requests.exceptions import ConnectionError
@@ -218,21 +219,22 @@ class DirectLink(object):
     # Downloads images using the phantomJS browser
     def download_image(url, file_path, driver):
         def download():
+            nonlocal path_folder
             if r.status_code == 200:
                 path = folders['direct']
-                path_folder = path + "\\" + image_name.split(".")[0]
+                path_folder = path + "\\" + image_name.split(".")[:-1]
                 if not os.path.exists(path_folder):
                     os.mkdir(path_folder)
-                path = path_folder + "\\" + image_name
+                path = path_folder + "\\" + re.sub('[<>:\\"\|?\*]', '',r.url.split('/')[-1])
                 print(path)
                 if save_file(path, r.raw):
-                    os.rename(file_path, path_folder + "\\Link.txt")
                     return True
                 else:
                     return False
             else:
                 return False
         image_name = url.split('/')[-1]
+        image_name = re.sub('[<>:\\"\|?\*]', '', image_name)
         print(url)
         try:
             r = requests.get(url, stream=True)
@@ -240,23 +242,32 @@ class DirectLink(object):
             print(e)
             return False
         print(image_name)
+        filename = file_path.split("\\")[-1]
         if "image" in r.headers['Content-Type']:
+            print('direct link')
             return download()
         else:
             driver.get(url)
             images = driver.find_elements_by_tag_name('img')
-            if len(images) > 5:
-                os.rename(file_path, file_path + "\\Too many images\\" + file_path.split("\\")[-1])
+            if len(images) > 20:
+                os.rename(file_path, folders['other'] + "\\Too many images\\" + filename)
                 return False
             else:
+                path_folder = ""
                 for image in images:
                     src = image.get_attribute('src')
+                    print(src)
                     if src is None:
                         src = image.get_attribute('data-src')
                         if src is None:
                             return False
                     r = requests.get(src, stream=True)
-                    return download()
+                    print(r.url)
+                    value = download()
+                if value:
+                    os.rename(file_path, path_folder + "\\" + filename)
+                return value
+
 
 
 class Deviantart(object):

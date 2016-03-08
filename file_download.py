@@ -83,6 +83,9 @@ class GetFiles(object):
                     if not s.phantom_on:
                         s.start_phantomjs()
                     result = DirectLink.download_image(link, opened, s.phantom_driver)
+                    print(result)
+                    if result:
+                        os.remove(opened)
                     if not result:
                         print("Fuck")
             print('\n')

@@ -2,7 +2,7 @@ import json
 import os
 import shutil
 import sys
-import xml.etree.ElementTree as etree
+import xml.etree.ElementTree as ET
 from time import sleep
 import re
 
@@ -20,11 +20,14 @@ folders = {'imgur': 'Imgur', 'deviant': 'DeviantArt', 'direct': 'Other', 'tumblr
 
 
 def save_file(path, content):
-    with open(path, 'wb') as f:
-        f.raw.decode_content = True
-        shutil.copyfileobj(content, f)
-        f.close()
-        return True
+    if not os.path.exists(path):
+        with open(path, 'wb') as f:
+            f.raw.decode_content = True
+            shutil.copyfileobj(content, f)
+            f.close()
+            return True
+    else:
+        return False
 
 
 # The folder where the subfolders and text files are
@@ -139,7 +142,7 @@ class Imgur(object):
                 size = self.get_size(images)
                 if size > self.max_size:
                     print("Too big:", size)
-                    return "Images " + str(amount) + " Size " + str(size/1000000) + "MB " + album_name
+                    return "Images " + str(amount) + " Size " + str(size / 1000000) + "MB " + album_name
             folder_name = album_name + "\\"
             index = ["%.2d" % i for i in range(1, amount+1)]
             moved = False
@@ -219,14 +222,16 @@ class DirectLink(object):
     # Downloads images using the phantomJS browser
     def download_image(url, file_path, driver):
         def download():
-            nonlocal path_folder
+            nonlocal path_folder, r
             if r.status_code == 200:
                 path = folders['direct']
-                path_folder = path + "\\" + image_name.split(".")[:-1]
+                path_folder = path + "\\" + ''.join(image_name.split(".")[:-1])
                 if not os.path.exists(path_folder):
                     os.mkdir(path_folder)
-                path = path_folder + "\\" + re.sub('[<>:\\"\|?\*]', '',r.url.split('/')[-1])
+                path = path_folder + "\\" + re.sub('[<>:\\"\|?\*]', '', r.url.split('/')[-1])
                 print(path)
+                if os.path.isfile(path):
+                    return False
                 if save_file(path, r.raw):
                     return True
                 else:
@@ -267,7 +272,6 @@ class DirectLink(object):
                 if value:
                     os.rename(file_path, path_folder + "\\" + filename)
                 return value
-
 
 
 class Deviantart(object):
@@ -383,7 +387,7 @@ class Tumblr(object):
         except (KeyError, TypeError) as e:
             print("Key error: ", e.args, json_file)
             return False
-        index = ["%.2d" % i for i in range(1, len(images)+1)]
+        index = ["%.2d" % i for i in range(1, len(images) + 1)]
         for idx, image in enumerate(images):
             url = image.get('original_size').get('url')
             if not self.download_image(url, folder, index[idx]):
@@ -392,7 +396,7 @@ class Tumblr(object):
         print(extra_images)
         if '<img' in extra_images:
             extra_images = '<extraimage>' + extra_images + '</extraimage>'
-            tree = etree.fromstring(extra_images)
+            tree = ET.fromstring(extra_images)
             for img in tree:
                 i = img.find('img')
                 if i is not None:

@@ -58,13 +58,15 @@ def check_folders():
 class Imgur(object):
 
     max_images = 50
-    max_size = 157286400  # In bytes
+    max_size = 157286400  #In bytes
+    url = "imgur.com"
 
     def __init__(self, imgurclient=None):
         self.imgurclient = imgurclient
 
-    # Get the Imgur image. Exceptions return False, otherwise True
+    #Get the Imgur image. Exceptions return False, otherwise True
     def get(self, url, filename):
+        self.url = url
         imgurclient = self.imgurclient
         if imgurclient is None:
             raise ImgurClientError
@@ -87,9 +89,11 @@ class Imgur(object):
                 images = imgurclient.get_album_images(album_id)
                 return self.download(images, self.album_name(album), filename)
             elif "imgur.com" in link:
-                img_id = link[-1]
+                img_id = link[-1].split('.')[0]
                 if img_id == "new":
                     img_id = link[-2]
+                    print('not implimented yet. img_id: ', img_id)
+                    return False
                 if len(img_id) == 5:
                     print("Image id:", img_id)
                     album = imgurclient.get_album(img_id)
@@ -125,6 +129,10 @@ class Imgur(object):
                     os.mkdir(path)
                 if file is not None and moved is False:
                     os.rename(main_folder + '\\' + file, path + file)
+                    moved = True
+                elif album_name is not None and file is None and moved is False:
+                    with open(path + 'Link.txt', 'a') as f:
+                        f.write(self.url)
                     moved = True
                 if i != "":
                     i += " "
@@ -225,7 +233,10 @@ class DirectLink(object):
             nonlocal path_folder, r
             if r.status_code == 200:
                 path = folders['direct']
-                path_folder = path + "\\" + ''.join(image_name.split(".")[:-1])
+                name = ''.join(image_name.split(".")[:-1])
+                if name == "":
+                    name = ''.join(image_name.split("."))
+                path_folder = path + "\\" + name
                 if not os.path.exists(path_folder):
                     os.mkdir(path_folder)
                 path = path_folder + "\\" + re.sub('[<>:\\"\|?\*]', '', r.url.split('/')[-1])
@@ -247,18 +258,25 @@ class DirectLink(object):
             print(e)
             return False
         print(image_name)
-        filename = file_path.split("\\")[-1]
+        if file_path is not None:
+            filename = file_path.split("\\")[-1]
+        path_folder = ""
         if "image" in r.headers['Content-Type']:
             print('direct link')
-            return download()
+            value = download()
+            if value and file_path is not None:
+                os.rename(file_path, path_folder + "\\" + filename)
+            elif value:
+                with open(path_folder + '\\Link.txt', 'a') as link:
+                    link.write(url)
+            return value
         else:
             driver.get(url)
             images = driver.find_elements_by_tag_name('img')
-            if len(images) > 20:
+            if len(images) > 20 and file_path is not None:
                 os.rename(file_path, folders['other'] + "\\Too many images\\" + filename)
                 return False
             else:
-                path_folder = ""
                 for image in images:
                     src = image.get_attribute('src')
                     print(src)
@@ -269,8 +287,13 @@ class DirectLink(object):
                     r = requests.get(src, stream=True)
                     print(r.url)
                     value = download()
-                if value:
+                print(value, file_path, path_folder)
+                if value and file_path is not None:
                     os.rename(file_path, path_folder + "\\" + filename)
+                elif value:
+                    print(path_folder+'\\Link.txt')
+                    with open(path_folder + '\\Link.txt', 'a') as link:
+                        link.write(url)
                 return value
 
 
@@ -292,7 +315,11 @@ class Deviantart(object):
             success = self.download_image(image_url, filename)
             renamed = folders['deviant'] + '\\' + filename + "\\" + filename + ".txt"
             if success and not os.path.isfile(renamed):
-                os.rename(file_path, renamed)
+                if file_path is not None:
+                    os.rename(file_path, renamed)
+                else:
+                    with open(renamed, 'a') as f:
+                        f.write(link)
                 return True
             else:
                 return False

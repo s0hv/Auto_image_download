@@ -1,5 +1,6 @@
 import os
 import time
+import json
 
 from imgurpython import ImgurClient
 from selenium import webdriver
@@ -10,7 +11,6 @@ from downloaders import Imgur, Gfycat, Deviantart, DirectLink, Tumblr
 
 
 class GetFiles(object):
-
     def __init__(s):
         # Set up the variables
         s.path = ""
@@ -37,58 +37,88 @@ class GetFiles(object):
             with open(opened) as f:
                 link = f.readline()
                 f.close()
-                # Imgur images
-                if 'imgur.com/' in link:
-                    print(link)
-                    result = s.imgur.get(link,file)
-                    print("Result: ", result, opened)
-                    if result is False:
-                        print("Could not download image")
-                    elif result is not False and not True:
-                        print("Big album")
-                        os.rename(opened, path + "\\Imgur\\Big albums\\" + result + ".txt")
-                    elif result:
-                        print("Success")
-                        if os.path.isfile(opened):
-                            os.remove(opened)
-                        print('\n')
-                # Gfycat images
-                elif 'gfycat.com' in link:
-                    gfy_id = link.split("/")[-1].split(".")[0]
-                    result = s.gfycat.get_image(gfy_id)
-                    print(result)
-                    if result and f.closed:
-                        os.remove(opened)
-                        print('\n')
-                    else:
-                        print("Something went wrong in gfycat")
+            s.download(opened, file)
+
+    def download(s, link, file=None):
+        result = False
+        if file is not None:
+            path = s.path
+        else:
+            path = None
+        print(link)
+        # Imgur images
+        if 'imgur.com/' in link:
+            result = s.imgur.get(link, file)
+            print("Result: ", result, path)
+            if result is False:
+                print("Could not download image")
+            elif result is not False and not True:
+                print("Big album")
+                os.rename(path, path + "\\Imgur\\Big albums\\" + result + ".txt")
+            elif result:
+                print("Success")
+                if path is not None and os.path.isfile(path):
+                    os.remove(path)
+                    print('\n')
+                    # Gfycat images
+        elif 'gfycat.com' in link:
+            gfy_id = link.split("/")[-1].split(".")[0]
+            result = s.gfycat.get_image(gfy_id)
+            print(result)
+            if result and path is not None:
+                os.remove(path)
+                print(link, '\n')
+            else:
+                print("Something went wrong in gfycat")
                 # DeviantArt images. Doesn't work if Chrome didn't start correctly
-                elif 'deviantart.com' in link:
-                    if not s.chrome_on:
-                        s.open_chrome(s.chrome_extension)
-                    if s.chrome_working:
-                        s.close_windows(s.driver.current_url)
-                        result = s.deviantart.get_image(opened, link)
-                        if result:
-                            print("Nice", result)
-                        else:
-                            print("Fuck")
-                elif '.tumblr.' in link:
-                    if s.tumblr is not None:
-                        result = s.tumblr.download(link)
-                        print(result)
-                        if result is True:
-                            os.remove(opened)
+        elif 'deviantart.com' in link:
+            if not s.chrome_on:
+                s.open_chrome(s.chrome_extension)
+            if s.chrome_working:
+                s.close_windows(s.driver.current_url)
+                result = s.deviantart.get_image(path, link)
+                if result:
+                    print("Nice", result)
                 else:
-                    if not s.phantom_on:
-                        s.start_phantomjs()
-                    result = DirectLink.download_image(link, opened, s.phantom_driver)
-                    print(result)
-                    if result:
-                        os.remove(opened)
-                    if not result:
-                        print("Fuck")
-            print('\n')
+                    print("Fuck", result)
+        elif '.tumblr.' in link:
+            if s.tumblr is not None:
+                result = s.tumblr.download(link)
+                print(result)
+                if result is True and path is not None:
+                    os.remove(path)
+        else:
+            if not s.phantom_on:
+                s.start_phantomjs()
+            result = DirectLink.download_image(link, path, s.phantom_driver)
+            print(result, link)
+            if not result:
+                print("Fuck")
+        print('\n')
+        return result
+
+    def bookmarks(self, path):
+        if not os.path.isfile(path):
+            return False
+        with open(path) as file:
+            j = json.load(file)
+            file.close()
+        with open(r'Data\Links.txt') as l:
+            links = l.read()
+        new = ""
+        for i in j['roots']['bookmark_bar']['children']:
+            try:
+                foldername = i['name']
+                if foldername == 'Pictures':
+                    for l in i['children']:
+                        url = l['url']
+                        if url not in links:
+                            if self.download(url):
+                                new += url + '\n'
+            except KeyError:
+                pass
+        with open(r'Data\Links.txt', 'a') as l:
+            l.write(new)
 
     def close_windows(s, curr_url):
         driver = s.driver

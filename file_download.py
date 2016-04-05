@@ -37,17 +37,17 @@ class GetFiles(object):
             with open(opened) as f:
                 link = f.readline()
                 f.close()
-            s.download(opened, file)
+            s.download(link, file)
 
     def download(s, link, file=None):
         result = False
         if file is not None:
-            path = s.path
+            path = s.path + "\\" + file
         else:
             path = None
         print(link)
         # Imgur images
-        if 'imgur.com/' in link:
+        if 'imgur.com' in link:
             result = s.imgur.get(link, file)
             print("Result: ", result, path)
             if result is False:
@@ -100,7 +100,7 @@ class GetFiles(object):
     def bookmarks(self, path):
         if not os.path.isfile(path):
             return False
-        with open(path) as file:
+        with open(path, 'r', encoding='utf-8') as file:
             j = json.load(file)
             file.close()
         with open(r'Data\Links.txt') as l:

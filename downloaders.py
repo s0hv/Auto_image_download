@@ -92,8 +92,6 @@ class Imgur(object):
                 img_id = link[-1].split('.')[0]
                 if img_id == "new":
                     img_id = link[-2]
-                    print('not implimented yet. img_id: ', img_id)
-                    return False
                 if len(img_id) == 5:
                     print("Image id:", img_id)
                     album = imgurclient.get_album(img_id)

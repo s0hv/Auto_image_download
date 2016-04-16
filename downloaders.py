@@ -389,6 +389,9 @@ class Tumblr(object):
             return False
 
     def download(self, url):
+        r = requests.get(url)
+        if 'image' in r.headers.get('Content-Type'):
+            return 'DIRECTLINK'
         api = 'https://api.tumblr.com/v2/blog/'
         a = url.split("/")
         if self.strisint(a[-2]):

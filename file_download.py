@@ -81,7 +81,7 @@ class GetFiles(object):
                     print("Nice", result)
                 else:
                     print("Fuck", result)
-        elif '.tumblr.' in link:
+        elif '.tumblr.' in link and not '.media.tumblr.com/':
             if s.tumblr is not None:
                 result = s.tumblr.download(link)
                 print(result)

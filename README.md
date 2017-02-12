@@ -2,4 +2,4 @@
 Download images from links that I have saved.
 Not completely ready but works for the most part
 
-The first python I did and is not in development anymore since I don't want to rewrite it
+The first python project I did and it's not in development anymore since I don't want to rewrite it
